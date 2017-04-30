@@ -9,7 +9,7 @@ from keras.optimizers import SGD
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from keras import backend as K
 from keras.layers import Dropout
-from configurations import *
+
 from sklearn.externals import joblib
 import argparse
 from keras.callbacks import *
@@ -26,7 +26,7 @@ K.set_image_dim_ordering('th')  # Theano dimension ordering in this code
 '''
 def get_options():   
     
-    parser = argparse.ArgumentParser(description='Short sample app')
+    parser = argparse.ArgumentParser(description='UNET for Lung Nodule Detection')
     
     parser.add_argument('-out_dir', action="store", default='/scratch/cse/dual/cs5130287/Luna2016/output_final/',
                         dest="out_dir", type=str)
@@ -40,7 +40,7 @@ def get_options():
     parser.add_argument('-filter_width', action="store", default=3, dest="filter_width",type=int)
     parser.add_argument('-stride', action="store", default=3, dest="stride",type=int)
     parser.add_argument('-model_file', action="store", default="", dest="model_file",type=str) #TODO
-    parser.add_argument('-save_prefix', action="store", default="/scratch/cse/dual/cs5130287/Luna2016/goodModels/model_",
+    parser.add_argument('-save_prefix', action="store", default="model_",
                         dest="save_prefix",type=str)
     opts = parser.parse_args(sys.argv[1:])    
         
@@ -69,56 +69,56 @@ def gaussian_init(shape, name=None, dim_ordering=None):
 
 def get_unet_small(options):
     inputs = Input((1, 512, 512))
-    conv1 = Convolution2D(32, 3, 3, activation='elu',border_mode='same')(inputs)
+    conv1 = Convolution2D(32, options.filter_width, options.stride, activation='elu',border_mode='same')(inputs)
     conv1 = Dropout(0.2)(conv1)
-    conv1 = Convolution2D(32, 3, 3, activation='elu',border_mode='same', name='conv_1')(conv1)
+    conv1 = Convolution2D(32, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_1')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2), name='pool_1')(conv1)
     pool1 = BatchNormalization()(pool1)
 
-    conv2 = Convolution2D(64, 3, 3, activation='elu',border_mode='same')(pool1)
+    conv2 = Convolution2D(64, options.filter_width, options.stride, activation='elu',border_mode='same')(pool1)
     conv2 = Dropout(0.2)(conv2)
-    conv2 = Convolution2D(64, 3, 3, activation='elu',border_mode='same', name='conv_2')(conv2)
+    conv2 = Convolution2D(64, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_2')(conv2)
     pool2 = MaxPooling2D(pool_size=(2, 2), name='pool_2')(conv2)
     pool2 = BatchNormalization()(pool2)
 
-    conv3 = Convolution2D(128, 3, 3, activation='elu',border_mode='same')(pool2)
+    conv3 = Convolution2D(128, options.filter_width, options.stride, activation='elu',border_mode='same')(pool2)
     conv3 = Dropout(0.2)(conv3)
-    conv3 = Convolution2D(128, 3, 3, activation='elu',border_mode='same', name='conv_3')(conv3)
+    conv3 = Convolution2D(128, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_3')(conv3)
     pool3 = MaxPooling2D(pool_size=(2, 2), name='pool_3')(conv3)
     pool3 = BatchNormalization()(pool3)
 
-    conv4 = Convolution2D(256, 3, 3, activation='elu',border_mode='same')(pool3)
+    conv4 = Convolution2D(256, options.filter_width, options.stride, activation='elu',border_mode='same')(pool3)
     conv4 = Dropout(0.2)(conv4)
-    conv4 = Convolution2D(256, 3, 3, activation='elu',border_mode='same', name='conv_4')(conv4)
+    conv4 = Convolution2D(256, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_4')(conv4)
     conv4 = BatchNormalization()(conv4)
     # pool4 = MaxPooling2D(pool_size=(2, 2), name='pool_4')(conv4)
 
-    # conv5 = Convolution2D(512, 3, 3, activation='elu',border_mode='same')(pool4)
+    # conv5 = Convolution2D(512, options.filter_width, options.stride, activation='elu',border_mode='same')(pool4)
     # conv5 = Dropout(0.2)(conv5)
-    # conv5 = Convolution2D(512, 3, 3, activation='elu',border_mode='same', name='conv_5')(conv5)
+    # conv5 = Convolution2D(512, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_5')(conv5)
 
     # up6 = merge([UpSampling2D(size=(2, 2))(conv5), conv4], mode='concat', concat_axis=1)
-    # conv6 = Convolution2D(256, 3, 3, activation='elu',border_mode='same')(up6)
+    # conv6 = Convolution2D(256, options.filter_width, options.stride, activation='elu',border_mode='same')(up6)
     # conv6 = Dropout(0.2)(conv6)
-    # conv6 = Convolution2D(256, 3, 3, activation='elu',border_mode='same', name='conv_6')(conv6)
+    # conv6 = Convolution2D(256, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_6')(conv6)
 
     up7 = merge([UpSampling2D(size=(2, 2))(conv4), conv3], mode='concat', concat_axis=1)
 
-    conv7 = Convolution2D(128, 3, 3, activation='elu',border_mode='same')(up7)
+    conv7 = Convolution2D(128, options.filter_width, options.stride, activation='elu',border_mode='same')(up7)
     conv7 = Dropout(0.2)(conv7)
-    conv7 = Convolution2D(128, 3, 3, activation='elu',border_mode='same', name='conv_7')(conv7)
+    conv7 = Convolution2D(128, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_7')(conv7)
     conv7 = BatchNormalization()(conv7)
 
     up8 = merge([UpSampling2D(size=(2, 2))(conv7), conv2], mode='concat', concat_axis=1)
-    conv8 = Convolution2D(64, 3, 3, activation='elu',border_mode='same')(up8)
+    conv8 = Convolution2D(64, options.filter_width, options.stride, activation='elu',border_mode='same')(up8)
     conv8 = Dropout(0.2)(conv8)
-    conv8 = Convolution2D(64, 3, 3, activation='elu',border_mode='same', name='conv_8')(conv8)
+    conv8 = Convolution2D(64, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_8')(conv8)
     conv8 = BatchNormalization()(conv8)
 
     up9 = merge([UpSampling2D(size=(2, 2))(conv8), conv1], mode='concat', concat_axis=1)
-    conv9 = Convolution2D(32, 3, 3, activation='elu',border_mode='same')(up9)
+    conv9 = Convolution2D(32, options.filter_width, options.stride, activation='elu',border_mode='same')(up9)
     conv9 = Dropout(0.2)(conv9)
-    conv9 = Convolution2D(32, 3, 3, activation='elu',border_mode='same', name='conv_9')(conv9)
+    conv9 = Convolution2D(32, options.filter_width, options.stride, activation='elu',border_mode='same', name='conv_9')(conv9)
     conv9 = BatchNormalization()(conv9)
 
     conv10 = Convolution2D(1, 1, 1, activation='sigmoid', name='sigmoid')(conv9)
@@ -158,7 +158,7 @@ class Accuracy(Callback):
         print ("Validation : %f"%self.dc(self.test_data_y,predicted))
 
 def train(use_existing):
-    print ("Yeh final hai yaar ")
+    print ("Loading the options ....")
     options = get_options()
     print ("epochs: %d"%options.epochs)
     print ("batch_size: %d"%options.batch_size)
