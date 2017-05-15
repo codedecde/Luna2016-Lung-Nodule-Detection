@@ -22,8 +22,13 @@ We use a U-net Convolutional Neural Network for lung nodule detection.
 * keras
 ---
 ## Preprocessing
----
-TODO : UPDATE
+Before inputting the CT images into the U-net architecture, it is important to reduce the domain size for more accurate results. We perform a variety of preprocessing steps to segment out the ROI (the lungs) from the surrounding regions of bones and fatty tissues. These include
+
+* Binary Thresholding
+* Selecting the two largest connected regions
+* Erosion to separate nodules attached to blood vessels
+* Dilation to keep nodules attached to the lung walls
+* Filling holes by dilation
 
 ## Network
 ----
