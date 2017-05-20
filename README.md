@@ -46,5 +46,8 @@ LUNA_unet.py contains the code for the actual model. The following arguments can
  model\_\_script_on_epoch\_ + _epoch number_  + \_lr\_ + _lr_ + \_WITH_STRIDES\_ + _filter stride_ + \_FILTER\_WIDTH\_ + _filter width_ + .weights
 
  # Results 
- =========
- TODO : UPDATE
+ ----
+ The following are some results we obtain
+
+![alt text](https://github.com/codedecde/Luna2016-Lung-Nodule-Detection/blob/master/Results/Results%201.JPG)
+![alt text](https://github.com/codedecde/Luna2016-Lung-Nodule-Detection/blob/master/Results/Results%202.JPG)
